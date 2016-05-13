@@ -57,6 +57,8 @@ if __name__ == '__main__':
 			kwargs['dr2'] = float(kwargs['dr2'])
 		if 'output_size' in kwargs:
 			kwargs['output_size'] = int(kwargs['output_size'])
+		if 'sum_after' in kwargs:
+			kwargs['sum_after'] = input_to_bool(kwargs['sum_after'])
 			
 		model = build_model(**kwargs)
 		print('...built untrained model')
