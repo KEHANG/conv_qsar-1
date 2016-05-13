@@ -11,7 +11,7 @@ import os
 import time
 
 from conv_qsar.main.core import build_model, train_model, save_model
-from conv_qsar.main.test import test_model, test_activations, test_embeddings_demo, test_predictions
+from conv_qsar.main.test import test_model, test_embeddings_demo
 from conv_qsar.main.data import get_data_full
 
 if __name__ == '__main__':
@@ -118,8 +118,8 @@ if __name__ == '__main__':
 		### LOAD WEIGHTS?
 		###################################################################################
 
-		if 'weights_fpath'in config['ARCHITECTURE']:
-			weights_fpath = config['ARCHITECTURE']['weights_fpath']
+		if 'weights_fpath'in config['IO']:
+			weights_fpath = config['IO']['weights_fpath']
 		else:
 			weights_fpath = fpath + '.h5'
 

@@ -1,6 +1,6 @@
 from __future__ import print_function
 import os
-from qsar.main.data import get_data_full
+from conv_qsar.main.data import get_data_full
 
 if __name__ == '__main__':
 	
