@@ -1,7 +1,7 @@
 from __future__ import print_function
-from conv_qsar.utils.parsing import input_to_bool
-from conv_qsar.utils.parse_cfg import read_config
-import conv_qsar.utils.reset_layers as reset_layers
+from conv_qsar_v2.utils.parsing import input_to_bool
+from conv_qsar_v2.utils.parse_cfg import read_config
+import conv_qsar_v2.utils.reset_layers as reset_layers
 import rdkit.Chem as Chem
 import matplotlib.pyplot as plt
 import datetime
@@ -10,9 +10,9 @@ import sys
 import os
 import time
 
-from conv_qsar.main.core import build_model, train_model, save_model
-from conv_qsar.main.test import test_model, test_embeddings_demo
-from conv_qsar.main.data import get_data_full
+from conv_qsar_v2.main.core import build_model, train_model, save_model
+from conv_qsar_v2.main.test import test_model, test_embeddings_demo
+from conv_qsar_v2.main.data import get_data_full
 
 if __name__ == '__main__':
 	if len(sys.argv) < 2:

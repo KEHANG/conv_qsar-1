@@ -1,7 +1,7 @@
 from __future__ import print_function
-from conv_qsar.utils.saving import save_model_history, save_model_history_manual
-from conv_qsar.utils.GraphEmbedding import GraphFP
-from conv_qsar.utils.neural_fp import sizeAttributeVector
+from conv_qsar_v2.utils.saving import save_model_history, save_model_history_manual
+from conv_qsar_v2.utils.GraphEmbedding import GraphFP
+from conv_qsar_v2.utils.neural_fp import sizeAttributeVector
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
 from keras.callbacks import LearningRateScheduler, EarlyStopping
@@ -47,6 +47,8 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 	if sum_after:
 		print('Using GraphFP with attribute summing *after* activation')
 		from conv_qsar.utils.GraphEmbedding_sumAfter import GraphFP
+	else:
+		from conv_qsar_v2.utils.GraphEmbedding import GraphFP
 
 	# Add layers
 	model.add(GraphFP(embedding_size, sizeAttributeVector() - 1, 
@@ -150,6 +152,9 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = '0.01', pat
 	# Unpack
 	mols_train = train['mols']; y_train = train['y']; smiles_train = train['smiles']
 	mols_val   = val['mols'];   y_val   = val['y'];   smiles_val   = val['smiles']
+	print('{} to train on'.format(len(mols_train)))
+	print('{} to validate on'.format(len(mols_val)))
+	print('{} to test on'.format(len(smiles_val)))
 
 	# Create learning rate function
 	lr_func_string = 'def lr(epoch):\n    return {}\n'.format(lr_func)

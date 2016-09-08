@@ -1,5 +1,6 @@
 from __future__ import print_function
 from conv_qsar.utils.parse_cfg import read_config
+from conv_qsar.utils.parsing import input_to_bool
 from conv_qsar.utils.neural_fp import sizeAttributeVector
 import makeit.utils.reset_layers as reset_layers
 import rdkit.Chem as Chem
@@ -58,7 +59,9 @@ if __name__ == '__main__':
 			kwargs['dr2'] = float(kwargs['dr2'])
 		if 'output_size' in kwargs:
 			kwargs['output_size'] = int(kwargs['output_size'])
-			
+		if 'sum_after' in kwargs:
+			kwargs['sum_after'] = input_to_bool(kwargs['sum_after'])		
+				
 		model = build_model(**kwargs)
 		print('...built untrained model')
 	except KeyboardInterrupt:

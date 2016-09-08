@@ -1,4 +1,4 @@
-from conv_qsar.utils.neural_fp import *
+from conv_qsar_v2.utils.neural_fp import *
 import rdkit.Chem as Chem
 import numpy as np
 import os

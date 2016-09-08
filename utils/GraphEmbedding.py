@@ -12,7 +12,7 @@ import theano.tensor as T # should write custom back-end eventually, but this is
 import theano
 from keras import activations, initializations, regularizers
 from keras.engine.topology import Layer
-from makeit.utils.neural_fp import Graph, molToGraph
+from conv_qsar_v2.utils.neural_fp import Graph, molToGraph
 from rdkit.Chem import MolFromSmiles
 
 class GraphFP(Layer):

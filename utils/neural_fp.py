@@ -3,6 +3,11 @@
 import numpy as np
 import keras.backend as K
 import rdkit.Chem.AllChem as AllChem
+import rdkit.Chem.Descriptors as Descriptors
+import rdkit.Chem.rdMolDescriptors as rdMolDescriptors
+import rdkit.Chem.EState as EState
+import rdkit.Chem.rdPartialCharges as rdPartialCharges
+import rdkit.Chem.rdChemReactions as rdRxns
 import copy
 from theano.gof.type import Generic
 att_dtype = np.float32
@@ -97,6 +102,50 @@ def molToGraph(rdmol):
 	'''Converts an RDKit molecule to an attributed undirected graph'''
 	# Initialize
 	graph = Graph()
+
+	# Calculate atom-level molecule descriptors
+	attributes = [[] for i in rdmol.GetAtoms()]
+	labels = []
+
+	[attributes[i].append(x[0]) \
+		for (i, x) in enumerate(rdMolDescriptors._CalcCrippenContribs(rdmol))]
+	labels.append('Crippen contribution to logp')
+
+	[attributes[i].append(x[1]) \
+		for (i, x) in enumerate(rdMolDescriptors._CalcCrippenContribs(rdmol))]
+	labels.append('Crippen contribution to mr')
+
+	[attributes[i].append(x) \
+		for (i, x) in enumerate(rdMolDescriptors._CalcTPSAContribs(rdmol))]
+	labels.append('TPSA contribution')
+
+	[attributes[i].append(x) \
+		for (i, x) in enumerate(rdMolDescriptors._CalcLabuteASAContribs(rdmol)[0])]
+	labels.append('Labute ASA contribution')
+
+	[attributes[i].append(x) \
+		for (i, x) in enumerate(EState.EStateIndices(rdmol))]
+	labels.append('EState Index')
+
+	rdPartialCharges.ComputeGasteigerCharges(rdmol)
+	[attributes[i].append(float(a.GetProp('_GasteigerCharge'))) \
+		for (i, a) in enumerate(rdmol.GetAtoms())]
+	labels.append('Gasteiger partial charge')
+
+	# Gasteiger partial charges sometimes gives NaN
+	for i in range(len(attributes)):
+		if np.isnan(attributes[i][-1]):
+			attributes[i][-1] = 0.0
+
+	[attributes[i].append(float(a.GetProp('_GasteigerHCharge'))) \
+		for (i, a) in enumerate(rdmol.GetAtoms())]
+	labels.append('Gasteiger hydrogen partial charge')
+
+	# Gasteiger partial charges sometimes gives NaN
+	for i in range(len(attributes)):
+		if np.isnan(attributes[i][-1]):
+			attributes[i][-1] = 0.0
+
 	# Add bonds
 	for bond in rdmol.GetBonds():
 		edge = Edge()
@@ -105,10 +154,10 @@ def molToGraph(rdmol):
 		edge.connects = (bond.GetBeginAtomIdx(), bond.GetEndAtomIdx())
 		graph.edges.append(edge)
 	# Add atoms
-	for atom in rdmol.GetAtoms():
+	for k, atom in enumerate(rdmol.GetAtoms()):
 		node = Node()
 		node.i = atom.GetIdx()
-		node.attributes = atomAttributes(atom)
+		node.attributes = atomAttributes(atom, attributes[k])
 		for neighbor in atom.GetNeighbors():
 			node.neighbors.append((
 				neighbor.GetIdx(),
@@ -162,7 +211,7 @@ def bondAttributes(bond):
 
 	return np.array(attributes, dtype = att_dtype)
 
-def atomAttributes(atom):
+def atomAttributes(atom, extra_attributes = []):
 	'''Returns a numpy array of attributes for an RDKit atom
 
 	From ECFP defaults:
@@ -197,6 +246,8 @@ def atomAttributes(atom):
 	attributes.append(atom.IsInRing())
 	# Add boolean if aromatic atom
 	attributes.append(atom.GetIsAromatic())
+
+	attributes += extra_attributes
 
 	return np.array(attributes, dtype = att_dtype)
 
