@@ -6,7 +6,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from keras.optimizers import RMSprop, Adam
-from keras.utils.visualize_util import plot
+# from keras.utils.visualize_util import plot
 import numpy as np
 import datetime
 import json
@@ -108,9 +108,9 @@ def save_model(model, loss, val_loss, fpath = '', config = {}, tstamp = ''):
 	model.save_weights(fpath + '.h5', overwrite = True)
 	print('...saved weights')
 
-	# Dump image
-	plot(model, to_file = fpath + '.png')
-	print('...saved image')
+	# # Dump image
+	# plot(model, to_file = fpath + '.png')
+	# print('...saved image')
 
 	# Dump history
 	save_model_history_manual(loss, val_loss, fpath + '.hist')
