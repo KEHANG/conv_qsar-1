@@ -2,7 +2,7 @@ from __future__ import print_function
 from conv_qsar.utils.parse_cfg import read_config
 from conv_qsar.utils.parsing import input_to_bool
 from conv_qsar.utils.neural_fp import sizeAttributeVector
-import makeit.utils.reset_layers as reset_layers
+import conv_qsar_v2.utils.reset_layers as reset_layers
 import rdkit.Chem as Chem
 import matplotlib.pyplot as plt
 import datetime
@@ -12,9 +12,9 @@ import os
 import time
 import numpy as np
 
-from conv_qsar.main.core import build_model
-from conv_qsar.main.test import test_model
-from conv_qsar.main.data import get_data_full
+from conv_qsar_v2.main.core import build_model
+from conv_qsar_v2.main.test import test_model
+from conv_qsar_v2.main.data import get_data_full
 
 if __name__ == '__main__':
 	if len(sys.argv) < 2:

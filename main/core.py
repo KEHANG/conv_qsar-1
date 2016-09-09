@@ -46,7 +46,7 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 
 	if sum_after:
 		print('Using GraphFP with attribute summing *after* activation')
-		from conv_qsar.utils.GraphEmbedding_sumAfter import GraphFP
+		from conv_qsar_v2.utils.GraphEmbedding_sumAfter import GraphFP
 	else:
 		from conv_qsar_v2.utils.GraphEmbedding import GraphFP
 
