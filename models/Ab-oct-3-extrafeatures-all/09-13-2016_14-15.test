@@ -1,0 +1,16 @@
+conv_qsar_v2/models/Ab-oct-3-extrafeatures-all tested 09-13-2016_14-15, predicting log10(octanol sol (M))
+
+test entry	smiles	actual	predicted	actual - predicted
+0	CC[C@H](C)C(=O)O[C@H]1C[C@@H](C)C=C2C=C[C@H](C)[C@H](CC[C@@H]3C[C@@H](O)CC(=O)O3)[C@H]21	-1.965	[[-0.62276495]]	[[-1.34223509]]
+1	Brc1ccc(Br)cc1	-0.25	[[-0.26265281]]	[[ 0.01265281]]
+2	ClC(Cl)=C(Cl)C(Cl)=C(Cl)Cl	0.5	[[-0.5158965]]	[[ 1.01589656]]
+3	c1ccc2c(c1)[nH]c1ccccc12	-1.29	[[-1.29123366]]	[[ 0.0012337]]
+4	COP(=S)(OC)Oc1cc(Cl)c(Cl)cc1Cl	-0.16	[[-0.75934666]]	[[ 0.59934664]]
+5	O=C(O)Cc1sc(-c2ccccc2)nc1-c1ccc(Cl)cc1	-0.77	[[-1.93541634]]	[[ 1.16541636]]
+6	Oc1ccc(Cl)cc1Cl	0.35	[[ 0.06035589]]	[[ 0.28964412]]
+7	CCCCCCCCCCCCCC(=O)OC(C)C	0.195	[[ 0.59474313]]	[[-0.39974314]]
+8	CN1C(=O)CN=C(c2ccccc2)c2cc(Cl)ccc21	-1.01	[[-1.71708584]]	[[ 0.70708585]]
+9	c1ccccc1	0.75	[[ 1.00194573]]	[[-0.25194573]]
+10	CC(C)=O	0.836	[[ 0.69802243]]	[[ 0.1379776]]
+11	Brc1ccc(Br)c(Br)c1	-0.11	[[-0.82495016]]	[[ 0.71495014]]
+12	c1ccc2cc3ccccc3cc2c1	-1.78	[[-1.08443773]]	[[-0.69556224]]

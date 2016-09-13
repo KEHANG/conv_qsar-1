@@ -1,0 +1,3 @@
+conv_qsar_v2/models/Br-Tm-3-extrafeatures-all tested 09-13-2016_16-03, predicting Tm (deg C)
+
+test entry	smiles	actual	predicted	actual - predicted

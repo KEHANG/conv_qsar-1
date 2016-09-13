@@ -211,6 +211,9 @@ def test_embeddings_demo(model, fpath):
 			mol_graph = molToGraph(mol).dump_as_tensor()
 			single_mol_as_array = np.array([mol_graph])
 			embedding = tf([single_mol_as_array])
+			with open(os.path.join(fpath, smiles) + '.embedding', 'w') as fid:
+				for num in embedding.flatten():
+					fid.write(str(num) + '\n')
 			embedding_to_png(embedding, smiles, fpath)
 		except:
 			print('error saving embedding - was that a SMILES string?')

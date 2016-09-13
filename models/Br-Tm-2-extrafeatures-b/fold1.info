@@ -1,0 +1,5 @@
+conv_qsar_v2/models/Br-Tm-2-extrafeatures-b/fold1 saved 09-11-2016_20-52
+
+Configuration details
+------------
+  OrderedDict([('IO', OrderedDict([('__name__', 'IO'), ('model_fpath', 'conv_qsar_v2/models/Br-Tm-2-extrafeatures-b/fold<this_fold>'), ('use_existing_weights', 'false')])), ('ARCHITECTURE', OrderedDict([('embedding_size', 512), ('depth', 5), ('scale_output', 0.05), ('hidden', 50), ('padding', False)])), ('DATA', OrderedDict([('data_label', 'bradley_good'), ('data_split', 'cv'), ('cv_folds', '1/5'), ('batch_size', 1), ('shuffle_seed', 1473597165)])), ('TRAINING', OrderedDict([('batch_size', 1), ('nb_epoch', 200), ('lr_func', 'float(0.001 * np.exp(- epoch / 50.0))'), ('patience', 30)])), ('TESTING', OrderedDict([('__name__', 'TESTING'), ('test_embedding', 'false'), ('test_activations', 'false'), ('test_reactions', 'false')]))])

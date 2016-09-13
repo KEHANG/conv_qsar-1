@@ -1,0 +1,3 @@
+conv_qsar_v2/models/De-aq-3-extrafeatures-all tested 09-13-2016_14-44, predicting log10(aq sol (M))
+
+test entry	smiles	actual	predicted	actual - predicted
