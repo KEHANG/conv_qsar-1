@@ -195,6 +195,8 @@ def test_embeddings_demo(model, fpath):
 		plt.xlim([0, embedding.shape[1]])
 		plt.subplots_adjust(left = 0, right = 1, top = 0.4, bottom = 0)
 		plt.savefig(os.path.join(fpath, label) + '.png', bbox_inches = 'tight')
+		with open(os.path.join(fpath, label) + '.txt', 'w') as fid:
+			fid.write(str(embedding))
 		plt.close(fig)
 		plt.clf()
 		return

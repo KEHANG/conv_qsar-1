@@ -109,7 +109,7 @@ if __name__ == '__main__':
 		### LOAD WEIGHTS?
 		###################################################################################
 
-		if 'weights_fpath'in config['IO']:
+		if 'weights_fpath' in config['IO']:
 			weights_fpath = config['IO']['weights_fpath']
 		else:
 			weights_fpath = fpath + '.h5'
@@ -123,6 +123,13 @@ if __name__ == '__main__':
 		if use_old_weights and os.path.isfile(weights_fpath):
 			model.load_weights(weights_fpath)
 			print('...loaded weight information')
+
+			# Reset final dense?
+			if 'reset_final' in config['IO']:
+				layer = model.layers[-1]
+				layer.W.set_value((layer.init(layer.W.shape.eval()).eval()).astype(np.float32))
+				layer.b.set_value(np.zeros(layer.b.shape.eval(), dtype=np.float32))
+
 		elif use_old_weights and not os.path.isfile(weights_fpath):
 			print('Weights not found at specified path {}'.format(weights_fpath))
 			quit(1)
@@ -136,7 +143,7 @@ if __name__ == '__main__':
 		# Testing embeddings?
 		try:
 			if input_to_bool(config['TESTING']['test_embedding']):
-				test_embeddings_demo(model, data, fpath)
+				test_embeddings_demo(model, fpath)
 				quit(1)
 		except KeyError:
 			pass
