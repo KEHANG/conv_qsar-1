@@ -136,7 +136,7 @@ if __name__ == '__main__':
 		# Testing embeddings?
 		try:
 			if input_to_bool(config['TESTING']['test_embedding']):
-				test_embeddings_demo(model, data, fpath)
+				test_embeddings_demo(model, fpath)
 				quit(1)
 		except KeyError:
 			pass

@@ -1,0 +1,5 @@
+conv_qsar_v2/models/Ab-oct-De-aq-1-extrafeatures-c/fold2 saved 09-11-2016_03-34
+
+Configuration details
+------------
+  OrderedDict([('IO', OrderedDict([('__name__', 'IO'), ('model_fpath', 'conv_qsar_v2/models/Ab-oct-De-aq-1-extrafeatures-c/fold<this_fold>'), ('use_existing_weights', 'false')])), ('ARCHITECTURE', OrderedDict([('embedding_size', 512), ('depth', 5), ('scale_output', 0.05), ('hidden', 50), ('loss', 'custom'), ('output_size', 2), ('padding', False)])), ('DATA', OrderedDict([('data_label', 'abraham,delaney'), ('data_split', 'cv'), ('cv_folds', '2/5'), ('training_ratio', 1.0), ('batch_size', 1), ('shuffle_seed', 1473550344)])), ('TRAINING', OrderedDict([('batch_size', 1), ('nb_epoch', 100), ('lr_func', 'float(0.0007 * np.exp(- epoch / 30.0))'), ('patience', 100)])), ('TESTING', OrderedDict([('__name__', 'TESTING'), ('test_embedding', 'false'), ('test_activations', 'false'), ('test_reactions', 'false')]))])
