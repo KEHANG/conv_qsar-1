@@ -126,9 +126,10 @@ if __name__ == '__main__':
 
 			# Reset final dense?
 			if 'reset_final' in config['IO']:
-				layer = model.layers[-1]
-				layer.W.set_value((layer.init(layer.W.shape.eval()).eval()).astype(np.float32))
-				layer.b.set_value(np.zeros(layer.b.shape.eval(), dtype=np.float32))
+				if config['IO']['reset_final'] in ['true', 'y', 'Yes', 'True', '1']:
+					layer = model.layers[-1]
+					layer.W.set_value((layer.init(layer.W.shape.eval()).eval()).astype(np.float32))
+					layer.b.set_value(np.zeros(layer.b.shape.eval(), dtype=np.float32))
 
 		elif use_old_weights and not os.path.isfile(weights_fpath):
 			print('Weights not found at specified path {}'.format(weights_fpath))
