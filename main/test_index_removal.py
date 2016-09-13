@@ -1,7 +1,7 @@
 from __future__ import print_function
-from conv_qsar.utils.parse_cfg import read_config
-from conv_qsar.utils.parsing import input_to_bool
-from conv_qsar.utils.neural_fp import sizeAttributeVector
+from conv_qsar_v2.utils.parse_cfg import read_config
+from conv_qsar_v2.utils.parsing import input_to_bool
+from conv_qsar_v2.utils.neural_fp import sizeAttributeVector
 import conv_qsar_v2.utils.reset_layers as reset_layers
 import rdkit.Chem as Chem
 import matplotlib.pyplot as plt
@@ -11,6 +11,7 @@ import sys
 import os
 import time
 import numpy as np
+from copy import deepcopy
 
 from conv_qsar_v2.main.core import build_model
 from conv_qsar_v2.main.test import test_model
@@ -93,8 +94,8 @@ if __name__ == '__main__':
 		print('Weights not found at specified path {}'.format(weights_fpath))
 		quit(1)
 	else:
-		# New weights will be used anyway
-		pass
+		print('Could not load weights?')
+		quit(1)
 	
 	###################################################################################
 	### DEFINE DATA 
@@ -118,11 +119,31 @@ if __name__ == '__main__':
 	### DEFINE TESTING CONDITIONS
 	##############################
 
-	conditions = [[]]
-	for i in range(1):#range(sizeAttributeVector() - 1):
-		conditions += [
-			np.array(i)
-		]
+	conditions = [
+		[],
+		np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), # atom identity
+		np.array([11, 12, 13, 14, 15, 16]), # number of heavy neighbors
+		np.array([17, 18, 19, 20, 21]), # number of hydrogens
+		np.array([22]), # formal charge
+		np.array([23]), # in a ring
+		np.array([24]), # is aromatic
+		np.array([25]), # crippen contribution to logP
+		np.array([26]), # crippen contribution to MR
+		np.array([27]), # TPSA
+		np.array([28]), # Labute ASA
+		np.array([29]), # EState
+		np.array([30]), # Gasteiger
+		np.array([31]), # Gaasteiger hydrogen partial charge
+		np.array([32, 33, 34, 35]), # Bond order
+		np.array([36]), # Bond aromaticity
+		np.array([37]), # Bond conjugation
+		np.array([38]), # Bond in ring
+	]
+
+	# for i in range(1):#range(sizeAttributeVector() - 1):
+	# 	conditions += [
+	# 		np.array()
+	# 	]
 
 	for i, condition in enumerate(conditions):
 		print('REMOVING: {}'.format(condition))
@@ -132,10 +153,26 @@ if __name__ == '__main__':
 		data_kwargs['cv_folds'] = '1/1'
 		data = get_data_full(**data_kwargs)
 
+		average = None
+		counter = 0.0
+		# Calculate average value
+		for i in range(3): # for each train, val, test
+			for j in range(len(data[i]['mols'])): # for each mol in that list
+				val = data[i]['mols'][j][:, :, condition]
+				for k in range(val.shape[0]):
+					if average is None:
+						average = val[k, k, :]
+					else:
+						average = (average * counter + val[k, k, :]) / (counter + 1.0)
+				counter += 1.0
+
+		print('Condition: {}'.format(condition))
+		print('Average: {}'.format(average))
+
 		# Now filter as needed
 		for i in range(3): # for each train, val, test
 			for j in range(len(data[i]['mols'])): # for each mol in that list
-				data[i]['mols'][j][:, :, condition] = 0.0 # reset that feature index to zero
+				data[i]['mols'][j][:, :, condition] = average # reset that feature index to the avg
 
 		###################################################################################
 		### TEST MODEL
