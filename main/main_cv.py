@@ -66,17 +66,6 @@ if __name__ == '__main__':
 		print('User cancelled model building')
 		quit(1)
 
-	###################################################################################
-	### CHECK FOR TESTING CONDITIONS
-	###################################################################################
-
-	# Testing embeddings?
-	try:
-		if input_to_bool(config['TESTING']['test_embedding']):
-			test_embeddings_demo(model, data, fpath)
-			quit(1)
-	except KeyError:
-		pass
 
 	###################################################################################
 	### DEFINE DATA 
@@ -138,6 +127,18 @@ if __name__ == '__main__':
 			print('Weights not found at specified path {}'.format(weights_fpath))
 			quit(1)
 		else:
+			pass
+
+		###################################################################################
+		### CHECK FOR TESTING CONDITIONS
+		###################################################################################
+
+		# Testing embeddings?
+		try:
+			if input_to_bool(config['TESTING']['test_embedding']):
+				test_embeddings_demo(model, data, fpath)
+				quit(1)
+		except KeyError:
 			pass
 
 		###################################################################################
