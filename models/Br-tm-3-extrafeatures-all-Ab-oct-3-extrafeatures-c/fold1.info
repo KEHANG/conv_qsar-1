@@ -1,5 +1,0 @@
-conv_qsar_v2/models/Br-tm-3-extrafeatures-all-Ab-oct-3-extrafeatures-c/fold1 saved 09-13-2016_21-57
-
-Configuration details
-------------
-  OrderedDict([('IO', OrderedDict([('__name__', 'IO'), ('model_fpath', 'conv_qsar_v2/models/Br-tm-3-extrafeatures-all-Ab-oct-3-extrafeatures-c/fold<this_fold>'), ('use_existing_weights', 'true'), ('weights_fpath', 'conv_qsar_v2/models/Br-Tm-3-extrafeatures-all.h5'), ('reset_final', 'true')])), ('ARCHITECTURE', OrderedDict([('embedding_size', 512), ('depth', 5), ('scale_output', 0.05), ('hidden', 50), ('padding', False)])), ('DATA', OrderedDict([('data_label', 'abraham'), ('data_split', 'cv'), ('cv_folds', '1/5'), ('batch_size', 1), ('shuffle_seed', 1473802413)])), ('TRAINING', OrderedDict([('batch_size', 1), ('nb_epoch', 150), ('lr_func', 'float(0.0007 * np.exp(- epoch / 30.0))'), ('patience', 25)])), ('TESTING', OrderedDict([('__name__', 'TESTING'), ('test_embedding', 'false'), ('test_activations', 'false'), ('test_reactions', 'false')]))])

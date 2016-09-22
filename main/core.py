@@ -1,7 +1,7 @@
 from __future__ import print_function
-from conv_qsar_v2.utils.saving import save_model_history, save_model_history_manual
-from conv_qsar_v2.utils.GraphEmbedding import GraphFP
-from conv_qsar_v2.utils.neural_fp import sizeAttributeVector
+from conv_qsar.utils.saving import save_model_history, save_model_history_manual
+from conv_qsar.utils.GraphEmbedding import GraphFP
+from conv_qsar.utils.neural_fp import sizeAttributeVector
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
 from keras.callbacks import LearningRateScheduler, EarlyStopping
@@ -46,9 +46,9 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 
 	if sum_after:
 		print('Using GraphFP with attribute summing *after* activation')
-		from conv_qsar_v2.utils.GraphEmbedding_sumAfter import GraphFP
+		from conv_qsar.utils.GraphEmbedding_sumAfter import GraphFP
 	else:
-		from conv_qsar_v2.utils.GraphEmbedding import GraphFP
+		from conv_qsar.utils.GraphEmbedding import GraphFP
 
 	# Add layers
 	model.add(GraphFP(embedding_size, sizeAttributeVector() - 1, 

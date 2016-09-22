@@ -1,7 +1,7 @@
 from __future__ import print_function
 import rdkit.Chem as Chem
-from conv_qsar_v2.utils.neural_fp import molToGraph
-import conv_qsar_v2.utils.stats as stats
+from conv_qsar.utils.neural_fp import molToGraph
+import conv_qsar.utils.stats as stats
 import keras.backend as K 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -202,13 +202,14 @@ def test_embeddings_demo(model, fpath):
 		return
 
 	smiles = ''
+	print('**using molecular attributes**')
 	while True:
 		smiles = raw_input('Enter smiles: ').strip()
 		if smiles == 'done':
 			break
 		try:
 			mol = Chem.MolFromSmiles(smiles)
-			mol_graph = molToGraph(mol).dump_as_tensor()
+			mol_graph = molToGraph(mol, molecular_attributes = True).dump_as_tensor()
 			single_mol_as_array = np.array([mol_graph])
 			embedding = tf([single_mol_as_array])
 			with open(os.path.join(fpath, smiles) + '.embedding', 'w') as fid:

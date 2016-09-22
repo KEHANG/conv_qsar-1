@@ -1,8 +1,8 @@
 from __future__ import print_function
-from conv_qsar_v2.utils.parse_cfg import read_config
-from conv_qsar_v2.utils.parsing import input_to_bool
-from conv_qsar_v2.utils.neural_fp import sizeAttributeVector
-import conv_qsar_v2.utils.reset_layers as reset_layers
+from conv_qsar.utils.parse_cfg import read_config
+from conv_qsar.utils.parsing import input_to_bool
+from conv_qsar.utils.neural_fp import sizeAttributeVector
+import conv_qsar.utils.reset_layers as reset_layers
 import rdkit.Chem as Chem
 import matplotlib.pyplot as plt
 import datetime
@@ -13,9 +13,9 @@ import time
 import numpy as np
 from copy import deepcopy
 
-from conv_qsar_v2.main.core import build_model
-from conv_qsar_v2.main.test import test_model
-from conv_qsar_v2.main.data import get_data_full
+from conv_qsar.main.core import build_model
+from conv_qsar.main.test import test_model
+from conv_qsar.main.data import get_data_full
 
 if __name__ == '__main__':
 	if len(sys.argv) < 2:
@@ -114,6 +114,10 @@ if __name__ == '__main__':
 		data_kwargs['truncate_to'] = int(data_kwargs['truncate_to'])
 	if 'training_ratio' in data_kwargs:
 		data_kwargs['training_ratio'] = float(data_kwargs['training_ratio'])
+	if 'molecular_attributes' in data_kwargs: 
+		data_kwargs['molecular_attributes'] = input_to_bool(data_kwargs['molecular_attributes'])
+	else:
+		raise ValueError('Need to use molecular attributes for this script')
 
 	##############################
 	### DEFINE TESTING CONDITIONS
@@ -172,7 +176,11 @@ if __name__ == '__main__':
 		# Now filter as needed
 		for i in range(3): # for each train, val, test
 			for j in range(len(data[i]['mols'])): # for each mol in that list
-				data[i]['mols'][j][:, :, condition] = average # reset that feature index to the avg
+				val = data[i]['mols'][j][:, :, condition] 
+				for k in range(val.shape[0]):
+					for l in range(val.shape[1]):
+						if not (val[k, l, :] == 0.0).all():
+							data[i]['mols'][j][k, l, condition] = average # reset that feature index to the avg
 
 		###################################################################################
 		### TEST MODEL

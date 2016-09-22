@@ -98,53 +98,54 @@ class Edge():
 		self.connects = connects # (atom index, atom index)
 		return
 
-def molToGraph(rdmol):
+def molToGraph(rdmol, molecular_attributes = False):
 	'''Converts an RDKit molecule to an attributed undirected graph'''
 	# Initialize
 	graph = Graph()
 
 	# Calculate atom-level molecule descriptors
 	attributes = [[] for i in rdmol.GetAtoms()]
-	labels = []
+	if molecular_attributes:
+		labels = []
+		[attributes[i].append(x[0]) \
+			for (i, x) in enumerate(rdMolDescriptors._CalcCrippenContribs(rdmol))]
+		labels.append('Crippen contribution to logp')
 
-	[attributes[i].append(x[0]) \
-		for (i, x) in enumerate(rdMolDescriptors._CalcCrippenContribs(rdmol))]
-	labels.append('Crippen contribution to logp')
+		[attributes[i].append(x[1]) \
+			for (i, x) in enumerate(rdMolDescriptors._CalcCrippenContribs(rdmol))]
+		labels.append('Crippen contribution to mr')
 
-	[attributes[i].append(x[1]) \
-		for (i, x) in enumerate(rdMolDescriptors._CalcCrippenContribs(rdmol))]
-	labels.append('Crippen contribution to mr')
+		[attributes[i].append(x) \
+			for (i, x) in enumerate(rdMolDescriptors._CalcTPSAContribs(rdmol))]
+		labels.append('TPSA contribution')
 
-	[attributes[i].append(x) \
-		for (i, x) in enumerate(rdMolDescriptors._CalcTPSAContribs(rdmol))]
-	labels.append('TPSA contribution')
+		[attributes[i].append(x) \
+			for (i, x) in enumerate(rdMolDescriptors._CalcLabuteASAContribs(rdmol)[0])]
+		labels.append('Labute ASA contribution')
 
-	[attributes[i].append(x) \
-		for (i, x) in enumerate(rdMolDescriptors._CalcLabuteASAContribs(rdmol)[0])]
-	labels.append('Labute ASA contribution')
+		[attributes[i].append(x) \
+			for (i, x) in enumerate(EState.EStateIndices(rdmol))]
+		labels.append('EState Index')
 
-	[attributes[i].append(x) \
-		for (i, x) in enumerate(EState.EStateIndices(rdmol))]
-	labels.append('EState Index')
+		rdPartialCharges.ComputeGasteigerCharges(rdmol)
+		[attributes[i].append(float(a.GetProp('_GasteigerCharge'))) \
+			for (i, a) in enumerate(rdmol.GetAtoms())]
+		labels.append('Gasteiger partial charge')
 
-	rdPartialCharges.ComputeGasteigerCharges(rdmol)
-	[attributes[i].append(float(a.GetProp('_GasteigerCharge'))) \
-		for (i, a) in enumerate(rdmol.GetAtoms())]
-	labels.append('Gasteiger partial charge')
+		# Gasteiger partial charges sometimes gives NaN
+		for i in range(len(attributes)):
+			if np.isnan(attributes[i][-1]):
+				attributes[i][-1] = 0.0
 
-	# Gasteiger partial charges sometimes gives NaN
-	for i in range(len(attributes)):
-		if np.isnan(attributes[i][-1]):
-			attributes[i][-1] = 0.0
+		[attributes[i].append(float(a.GetProp('_GasteigerHCharge'))) \
+			for (i, a) in enumerate(rdmol.GetAtoms())]
+		labels.append('Gasteiger hydrogen partial charge')
 
-	[attributes[i].append(float(a.GetProp('_GasteigerHCharge'))) \
-		for (i, a) in enumerate(rdmol.GetAtoms())]
-	labels.append('Gasteiger hydrogen partial charge')
+		# Gasteiger partial charges sometimes gives NaN
+		for i in range(len(attributes)):
+			if np.isnan(attributes[i][-1]):
+				attributes[i][-1] = 0.0
 
-	# Gasteiger partial charges sometimes gives NaN
-	for i in range(len(attributes)):
-		if np.isnan(attributes[i][-1]):
-			attributes[i][-1] = 0.0
 
 	# Add bonds
 	for bond in rdmol.GetBonds():
@@ -157,7 +158,7 @@ def molToGraph(rdmol):
 	for k, atom in enumerate(rdmol.GetAtoms()):
 		node = Node()
 		node.i = atom.GetIdx()
-		node.attributes = atomAttributes(atom, attributes[k])
+		node.attributes = atomAttributes(atom, extra_attributes = attributes[k])
 		for neighbor in atom.GetNeighbors():
 			node.neighbors.append((
 				neighbor.GetIdx(),

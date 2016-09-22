@@ -1,4 +1,4 @@
-from conv_qsar_v2.utils.neural_fp import *
+from conv_qsar.utils.neural_fp import *
 import rdkit.Chem as Chem
 import numpy as np
 import os
@@ -50,7 +50,8 @@ def merge_data(data1, data2):
 	return data1
 
 def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1, 
-	data_split = 'cv', cv_folds = '1/1',	truncate_to = None, training_ratio = 0.9):
+	data_split = 'cv', cv_folds = '1/1',	truncate_to = None, training_ratio = 0.9,
+	molecular_attributes = False):
 	'''This is a helper script to read the data file and return
 	the training and test data sets separately. This is to allow for an
 	already-trained model to be evaluated using the test data (i.e., which
@@ -131,7 +132,7 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 			# Molecule first (most likely to fail)
 			mol = Chem.MolFromSmiles(row[smiles_index])
 			Chem.SanitizeMol(mol)
-			mol_tensor = molToGraph(mol).dump_as_tensor()
+			mol_tensor = molToGraph(mol, molecular_attributes = molecular_attributes).dump_as_tensor()
 			this_y = y_func(float(row[y_index]))
 			mols.append(mol_tensor)
 			y.append(this_y) # Measured log(solubility M/L)
