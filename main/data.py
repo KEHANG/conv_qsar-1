@@ -149,8 +149,9 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 				del y[-1]
 				del smiles[-1]
 				del mols[-1]
-		except:
+		except Exception as e:
 			print('Failed to generate graph for {}, y: {}'.format(row[smiles_index], row[y_index]))
+			print(e)
 
 	###################################################################################
 	### PAD MOLECULAR TENSORS

@@ -3,7 +3,6 @@ from conv_qsar.utils.parsing import input_to_bool
 from conv_qsar.utils.parse_cfg import read_config
 import conv_qsar.utils.reset_layers as reset_layers
 import rdkit.Chem as Chem
-import matplotlib.pyplot as plt
 import numpy as np
 import datetime
 import json

@@ -57,7 +57,7 @@ class Graph():
 			raise(ValueError, 'Need at least one bond!')
 
 		N_nodes = len(self.nodes)
-		N_features = sizeAttributeVector()
+		N_features = len(self.nodes[0].attributes) + len(self.edges[0].attributes)
 		tensor = np.zeros((N_nodes, N_nodes, N_features))
 
 		# Special case of no bonds (e.g., methane)
