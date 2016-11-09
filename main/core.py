@@ -24,7 +24,8 @@ def mse_no_NaN(y_true, y_pred):
 
 def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2, 
 	scale_output = 0.05, padding = True, hidden = 0, loss = 'mse', hidden_activation = 'tanh',
-	output_activation = 'linear', dr1 = 0.0, dr2 = 0.0, output_size = 1, sum_after = False):
+	output_activation = 'linear', dr1 = 0.0, dr2 = 0.0, output_size = 1, sum_after = False,
+	molecular_attributes = False):
 	'''Generates simple embedding model to use molecular tensor as
 	input in order to predict a single-valued output (i.e., yield)
 
@@ -51,7 +52,7 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 		from conv_qsar.utils.GraphEmbedding import GraphFP
 
 	# Add layers
-	model.add(GraphFP(embedding_size, sizeAttributeVector() - 1, 
+	model.add(GraphFP(embedding_size, sizeAttributeVector(molecular_attributes) - 1, 
 		depth = depth,
 		scale_output = scale_output,
 		padding = padding,

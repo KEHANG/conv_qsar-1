@@ -258,9 +258,9 @@ def oneHotVector(val, lst):
 		val = lst[-1]
 	return map(lambda x: x == val, lst)
 
-def sizeAttributeVector():
+def sizeAttributeVector(molecular_attributes = False):
 	m = AllChem.MolFromSmiles('CC')
-	g = molToGraph(m)
+	g = molToGraph(m, molecular_attributes = molecular_attributes)
 	a = g.nodes[0]
 	b = g.edges[0]
 	return len(a.attributes) + len(b.attributes)
