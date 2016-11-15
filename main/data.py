@@ -91,10 +91,20 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 		def y_func(x): return x
 		y_label = 'Tm (deg C)'
 
+	elif 'nr' in data_label or 'sr' in data_label:
+		print('Assuming TOX21 data {}'.format(data_label))
+		dset = data_label
+		data_fpath = os.path.join(data_froot, '{}.smiles'.format(data_label))
+		smiles_index = 0
+		y_index = 2
+		def y_func(x): return x
+		y_label = 'Active'
+
 	# Other?
 	else:
 		print('Unrecognized data_label {}'.format(data_label))
 		quit(1)
+
 
 	###################################################################################
 	### READ AND TRUNCATE DATA
@@ -103,7 +113,11 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 	print('reading data...')
 	data = []
 	with open(data_fpath, 'r') as data_fid:
-		reader = csv.reader(data_fid, delimiter = ',', quotechar = '"')
+		if 'sr' in dset or 'nr' in dset:
+			delimeter = '\t'
+		else:
+			delimeter = ','
+		reader = csv.reader(data_fid, delimiter = delimeter, quotechar = '"')
 		for row in reader:
 			data.append(row)
 	print('done')
@@ -149,7 +163,8 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 				del y[-1]
 				del smiles[-1]
 				del mols[-1]
-		except:
+		except Exception as e:
+			print(e)
 			print('Failed to generate graph for {}, y: {}'.format(row[smiles_index], row[y_index]))
 
 	###################################################################################

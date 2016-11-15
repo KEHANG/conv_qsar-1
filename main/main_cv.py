@@ -48,6 +48,8 @@ if __name__ == '__main__':
 			kwargs['embedding_size'] = int(kwargs['embedding_size'])
 		if 'hidden' in kwargs: 
 			kwargs['hidden'] = int(kwargs['hidden'])
+		if 'hidden2' in kwargs:
+			kwargs['hidden2'] = int(kwargs['hidden2'])
 		if 'depth' in kwargs: 
 			kwargs['depth'] = int(kwargs['depth'])
 		if 'scale_output' in kwargs: 

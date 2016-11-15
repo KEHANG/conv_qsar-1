@@ -22,8 +22,11 @@ def mse_no_NaN(y_true, y_pred):
 	'''For each sample, sum squared error ignoring NaN values'''
 	return K.sum(K.square(K.switch(K.logical_not(K.is_nan(y_true)), y_true, y_pred) - y_pred), axis = -1)
 
+def logloss_no_NaN(y_true, y_pred):
+	return K.sum(K.binary_crossentropy(K.switch(K.logical_not(K.is_nan(y_true)), y_true, y_pred), y_pred), axis = -1)
+
 def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2, 
-	scale_output = 0.05, padding = True, hidden = 0, loss = 'mse', hidden_activation = 'tanh',
+	scale_output = 0.05, padding = True, hidden = 0, hidden2 = 0, loss = 'mse', hidden_activation = 'tanh',
 	output_activation = 'linear', dr1 = 0.0, dr2 = 0.0, output_size = 1, sum_after = False):
 	'''Generates simple embedding model to use molecular tensor as
 	input in order to predict a single-valued output (i.e., yield)
@@ -66,8 +69,12 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 		if dr2 > 0:
 			model.add(Dropout(dr2))
 			print('    model: added Dropout({})'.format(dr2))
+	if hidden2 > 0:
+		model.add(Dense(hidden2, activation = hidden_activation))
+		print('    model: added {} Dense layer (-> {})'.format(hidden_activation, hidden2))
+
 	model.add(Dense(output_size, activation = output_activation))
-	print('    model: added lin Dense layer (-> {})'.format(output_size))
+	print('    model: added output Dense layer (-> {})'.format(output_size))
 
 	# Compile
 	if optimizer == 'adam':
@@ -81,6 +88,8 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 	# Custom loss to filter out NaN values in multi-task predictions
 	if loss == 'custom':
 		loss = mse_no_NaN
+	elif loss == 'custom2':
+		loss = logloss_no_NaN
 
 	print('compiling...',)
 	model.compile(loss = loss, optimizer = optimizer)
