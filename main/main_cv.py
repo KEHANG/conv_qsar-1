@@ -3,7 +3,6 @@ from conv_qsar.utils.parsing import input_to_bool
 from conv_qsar.utils.parse_cfg import read_config
 import conv_qsar.utils.reset_layers as reset_layers
 import rdkit.Chem as Chem
-import matplotlib.pyplot as plt
 import numpy as np
 import datetime
 import json
@@ -62,7 +61,10 @@ if __name__ == '__main__':
 			kwargs['output_size'] = int(kwargs['output_size'])
 		if 'sum_after' in kwargs:
 			kwargs['sum_after'] = input_to_bool(kwargs['sum_after'])
-			
+		 
+		if 'molecular_attributes' in config['DATA']:
+			kwargs['molecular_attributes'] = config['DATA']['molecular_attributes']
+
 		model = build_model(**kwargs)
 		print('...built untrained model')
 	except KeyboardInterrupt:

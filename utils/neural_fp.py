@@ -57,7 +57,7 @@ class Graph():
 			raise(ValueError, 'Need at least one bond!')
 
 		N_nodes = len(self.nodes)
-		N_features = sizeAttributeVector()
+		N_features = len(self.nodes[0].attributes) + len(self.edges[0].attributes)
 		tensor = np.zeros((N_nodes, N_nodes, N_features))
 
 		# Special case of no bonds (e.g., methane)
@@ -258,9 +258,9 @@ def oneHotVector(val, lst):
 		val = lst[-1]
 	return map(lambda x: x == val, lst)
 
-def sizeAttributeVector():
+def sizeAttributeVector(molecular_attributes = False):
 	m = AllChem.MolFromSmiles('CC')
-	g = molToGraph(m)
+	g = molToGraph(m, molecular_attributes = molecular_attributes)
 	a = g.nodes[0]
 	b = g.edges[0]
 	return len(a.attributes) + len(b.attributes)

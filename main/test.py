@@ -3,6 +3,8 @@ import rdkit.Chem as Chem
 from conv_qsar.utils.neural_fp import molToGraph
 import conv_qsar.utils.stats as stats
 import keras.backend as K 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import os
