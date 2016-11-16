@@ -51,7 +51,7 @@ def merge_data(data1, data2):
 
 def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1, 
 	data_split = 'cv', cv_folds = '1/1',	truncate_to = None, training_ratio = 0.9,
-	molecular_attributes = False):
+	molecular_attributes = False, use_FP = None):
 	'''This is a helper script to read the data file and return
 	the training and test data sets separately. This is to allow for an
 	already-trained model to be evaluated using the test data (i.e., which
@@ -144,16 +144,30 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 	for i, row in enumerate(data):
 		try:
 			# Molecule first (most likely to fail)
-			mol = Chem.MolFromSmiles(row[smiles_index])
+			mol = Chem.MolFromSmiles(row[smiles_index], sanitize = False)
 			Chem.SanitizeMol(mol)
 			mol_tensor = molToGraph(mol, molecular_attributes = molecular_attributes).dump_as_tensor()
+			if np.isnan(mol_tensor).any():
+				print('warning: NaN value in tensor for {}'.format(row[smiles_index]))
+			if np.isinf(mol_tensor).any():
+				raise ValueError('inf value in tensor for {} at {}'.format(row[smiles_index], 
+					np.argwhere(np.isinf(mol_tensor))))
+			# Are we trying to use Morgan FPs?
+			if use_FP == 'Morgan':
+				mol_tensor = np.array(AllChem.GetMorganFingerprintAsBitVect(mol,3,nBits=512,useFeatures=True))
+			elif type(use_FP) != type(None):
+				print('Unrecognised use_FP option {}'.format(use_FP))
 			this_y = y_func(float(row[y_index]))
 			mols.append(mol_tensor)
 			y.append(this_y) # Measured log(solubility M/L)
 			smiles.append(Chem.MolToSmiles(mol, isomericSmiles = True)) # Smiles
 
-			# Check for redundancies
-			if smiles.count(smiles[-1]) > 1:
+			# Check for redundancies and average
+			if 'nr-' in dset or 'sr-' in dset:
+				continue
+				# TODO: ADD DUPLICATE HANDLING
+
+			elif smiles.count(smiles[-1]) > 1:
 				print('**** DUPLICATE ENTRY ****')
 				print(smiles[-1])
 
@@ -163,6 +177,8 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 				del y[-1]
 				del smiles[-1]
 				del mols[-1]
+
+
 		except Exception as e:
 			print('Failed to generate graph for {}, y: {}'.format(row[smiles_index], row[y_index]))
 			print(e)
@@ -171,7 +187,7 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 	### PAD MOLECULAR TENSORS
 	###################################################################################
 
-	if batch_size > 1: # NEED TO PAD
+	if batch_size > 1 and type(use_FP) == type(None): # NEED TO PAD
 		num_atoms = [x.shape[0] for x in mols]
 		max_num_atoms = max(num_atoms)
 		print('padding tensors up to N_atoms = {}...'.format(max_num_atoms + 1))
@@ -252,12 +268,21 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 		print('Must specify a data_split type of "ratio" or "cv"')
 		quit(1)
 
+	
+
+
 	###################################################################################
 	### REPACKAGE AS DICTIONARIES
 	###################################################################################
+	if 'cv_full' in data_split: # cross-validation, but use 'test' as validation
+		train = {}; train['mols'] = mols_train; train['y'] = y_train; train['smiles'] = smiles_train; train['y_label'] = y_label
+		val   = {}; val['mols']   = mols_test;   val['y']   = y_test;   val['smiles']   = smiles_test;   val['y_label']   = y_label
+		test  = {}; test['mols']  = [];  test['y']  = [];  test['smiles']  = []; test['y_label']  = []
 
-	train = {}; train['mols'] = mols_train; train['y'] = y_train; train['smiles'] = smiles_train; train['y_label'] = y_label
-	val   = {}; val['mols']   = mols_val;   val['y']   = y_val;   val['smiles']   = smiles_val;   val['y_label']   = y_label
-	test  = {}; test['mols']  = mols_test;  test['y']  = y_test;  test['smiles']  = smiles_test; test['y_label']  = y_label
+	else:
+
+		train = {}; train['mols'] = mols_train; train['y'] = y_train; train['smiles'] = smiles_train; train['y_label'] = y_label
+		val   = {}; val['mols']   = mols_val;   val['y']   = y_val;   val['smiles']   = smiles_val;   val['y_label']   = y_label
+		test  = {}; test['mols']  = mols_test;  test['y']  = y_test;  test['smiles']  = smiles_test; test['y_label']  = y_label
 
 	return (train, val, test)

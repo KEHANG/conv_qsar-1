@@ -79,6 +79,28 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 			# Trim it to recorded values (not NaN)
 			true = np.array(true).flatten()
 			pred = np.array(pred).flatten()
+
+			# For TOX21
+			AUC = 'N/A'
+			if len(set(list(true))) == 2:
+				from sklearn.metrics import roc_auc_score, roc_curve, auc
+				roc_x, roc_y, _ = roc_curve(true, pred)
+				AUC = roc_auc_score(true, pred)
+				plt.figure()
+				lw = 2
+				plt.plot(roc_x, roc_y, color='darkorange',
+					lw = lw, label = 'ROC curve (area = %0.3f)' % AUC)
+				plt.plot([0, 1], [0, 1], color='navy', lw = lw, linestyle = '--')
+				plt.xlim([0.0, 1.0])
+				plt.ylim([0.0, 1.05])
+				plt.xlabel('False Positive Rate')
+				plt.ylabel('True Positive Rate')
+				plt.title('ROC for {}'.format(set_label))
+				plt.legend(loc = "lower right")
+				plt.savefig(test_fpath + ' {} ROC.png'.format(set_label), bbox_inches = 'tight')
+				plt.clf()
+
+
 			pred = pred[~np.isnan(true)]
 			true = true[~np.isnan(true)]
 
@@ -102,7 +124,7 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 			plt.xlabel('Actual {}'.format(y_label))
 			plt.ylabel('Predicted {}'.format(y_label))
 			plt.title('Parity plot for {} ({} set, N = {})'.format(y_label, set_label, len(true)) + 
-				'\nMSE = {}, MAE = {}, q = {}'.format(round3(mse), round3(mae), round3(q)) + 
+				'\nMSE = {}, MAE = {}, q = {}, AUC = {}'.format(round3(mse), round3(mae), round3(q), AUC) + 
 				'\na = {}, r^2 = {}'.format(round3(a), round3(r2)) + 
 				'\na` = {}, r^2` = {}'.format(round3(ap), round3(r2p)))
 			plt.grid(True)

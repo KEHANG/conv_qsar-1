@@ -5,13 +5,14 @@ from conv_qsar.utils.neural_fp import sizeAttributeVector
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
 from keras.callbacks import LearningRateScheduler, EarlyStopping
-from keras.optimizers import RMSprop, Adam
+from keras.optimizers import *
 # from keras.utils.visualize_util import plot
 import numpy as np
 import datetime
 import json
 import sys
 import os
+from tqdm import tqdm
 
 
 import keras.backend as K
@@ -28,7 +29,7 @@ def logloss_no_NaN(y_true, y_pred):
 def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2, 
 	scale_output = 0.05, padding = True, hidden = 0, hidden2 = 0, loss = 'mse', hidden_activation = 'tanh',
 	output_activation = 'linear', dr1 = 0.0, dr2 = 0.0, output_size = 1, sum_after = False,
-	molecular_attributes = False):
+	molecular_attributes = False, use_FP = None):
 	'''Generates simple embedding model to use molecular tensor as
 	input in order to predict a single-valued output (i.e., yield)
 
@@ -55,17 +56,22 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 		from conv_qsar.utils.GraphEmbedding import GraphFP
 
 	# Add layers
-	model.add(GraphFP(embedding_size, sizeAttributeVector(molecular_attributes) - 1, 
-		depth = depth,
-		scale_output = scale_output,
-		padding = padding,
-		activation_inner = 'tanh'))
-	print('    model: added GraphFP layer ({} -> {})'.format('mol', embedding_size))
+	if type(use_FP) == type(None): # normal mode, use convolution
+		model.add(GraphFP(embedding_size, sizeAttributeVector(molecular_attributes) - 1, 
+			depth = depth,
+			scale_output = scale_output,
+			padding = padding,
+			activation_inner = 'tanh'))
+		print('    model: added GraphFP layer ({} -> {})'.format('mol', embedding_size))
+
 	if hidden > 0:
 		if dr1 > 0:
 			model.add(Dropout(dr1))
 			print('    model: Added Dropout({})'.format(dr1))
-		model.add(Dense(hidden, activation = hidden_activation))
+		if type(use_FP) == type(None):
+			model.add(Dense(hidden, activation = hidden_activation))
+		else:
+			model.add(Dense(hidden, activation = hidden_Activation, input_dim = 512))
 		print('    model: added {} Dense layer (-> {})'.format(hidden_activation, hidden))
 		if dr2 > 0:
 			model.add(Dropout(dr2))
@@ -82,8 +88,12 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 		optimizer = Adam(lr = lr)
 	elif optimizer == 'rmsprop':
 		optimizer = RMSprop(lr = lr)
+	elif optimizer == 'adagrad':
+		optimizer = Adagrad(lr = lr)
+	elif optimizer == 'adadelta':
+		optimizer = Adadelta()
 	else:
-		print('Can only handle adam or rmsprop optimizers currently')
+		print('Unrecognized optimizer')
 		quit(1)
 
 	# Custom loss to filter out NaN values in multi-task predictions
@@ -137,7 +147,7 @@ def save_model(model, loss, val_loss, fpath = '', config = {}, tstamp = ''):
 	return True
 
 
-def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = '0.01', patience = 10):
+def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patience = 10):
 	'''Trains the model.
 
 	inputs:
@@ -167,8 +177,9 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = '0.01', pat
 	print('{} to test on'.format(len(smiles_val)))
 
 	# Create learning rate function
-	lr_func_string = 'def lr(epoch):\n    return {}\n'.format(lr_func)
-	exec lr_func_string
+	if lr_func:
+		lr_func_string = 'def lr(epoch):\n    return {}\n'.format(lr_func)
+		exec lr_func_string
 
 	# Fit (allows keyboard interrupts in the middle)
 	# Because molecular graph tensors are different sizes based on N_atoms, can only do one at a time
@@ -181,24 +192,46 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = '0.01', pat
 			wait = 0
 			prev_best_val_loss = 99999999
 			for i in range(nb_epoch):
-				print('Epoch {}/{}, lr = {}'.format(i + 1, nb_epoch, lr(i)))
 				this_loss = []
 				this_val_loss = []
-				model.optimizer.lr.set_value(lr(i))
-				
+				if lr_func: model.optimizer.lr.set_value(lr(i))
+				print('Epoch {}/{}, lr = {}'.format(i + 1, nb_epoch, model.optimizer.lr.get_value()))
+
 				# Run through training set
 				print('Training...')
 				training_order = range(len(mols_train))
 				np.random.shuffle(training_order)
-				for j in training_order:
+				for j in tqdm(training_order):
 					single_mol_as_array = np.array(mols_train[j:j+1])
+					# if np.isinf(single_mol_as_array).any():
+					# 	print('Inf found in mol input!')
+					# 	print(smiles[j])
+					# 	raw_input('Pausing...')
+					# if np.isnan(single_mol_as_array).any():
+					# 	print('NaN found in mol input!')
+					# 	print(smiles[j])
+					# 	raw_input('Pausing...')
 					single_y_as_array = np.reshape(y_train[j], (1, -1))
+					# if np.isinf(single_y_as_array).any():
+					# 	print('Inf found in target!')
+					# 	print(smiles[j])
+					# 	raw_input('Pausing...')
+					# if np.isnan(single_y_as_array).any():
+					# 	print('NaN found in target!')
+					# 	print(smiles[j])
+					# 	raw_input('Pausing...')
 					sloss = model.train_on_batch(single_mol_as_array, single_y_as_array)
+					# if np.isnan(sloss):
+					# 	print('WARNING: NAN LOSS')
+					# 	print('target was {}'.format(single_y_as_array))
+					# 	print('smiles is {}'.format(smiles_train[j]))
+					# 	print('any NaN in mol? {}'.format(np.isnan(single_mol_as_array).any()))
+					# 	raw_input('Pausing...')
 					this_loss.append(sloss)
 				
 				# Run through testing set
 				print('Validating..')
-				for j in range(len(mols_val)):
+				for j in tqdm(range(len(mols_val))):
 					single_mol_as_array = np.array(mols_val[j:j+1])
 					single_y_as_array = np.reshape(y_val[j], (1, -1))
 					sloss = model.test_on_batch(single_mol_as_array, single_y_as_array)
@@ -206,7 +239,7 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = '0.01', pat
 				
 				loss.append(np.mean(this_loss))
 				val_loss.append(np.mean(this_val_loss))
-				print('mse loss: {}\tmse val_loss: {}'.format(loss[i], val_loss[i]))
+				print('loss: {}\tval_loss: {}'.format(loss[i], val_loss[i]))
 
 				# Check progress
 				if np.mean(this_val_loss) < prev_best_val_loss:
@@ -224,7 +257,10 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = '0.01', pat
 				model.load_weights('best.h5')
 
 		else: # PADDED VALUES 
-			callbacks = [LearningRateScheduler(lr)]
+			if lr_func:
+				callbacks = [LearningRateScheduler(lr)]
+			else:
+				callbacks = []
 			if patience != -1:
 				callbacks.append(EarlyStopping(patience = patience, verbose = 1))
 
