@@ -58,6 +58,6 @@ if __name__ == '__main__':
 				os.path.dirname(os.path.dirname(__file__)),
 				'data', '{}-test.smiles'.format(target.lower())
 				), 'w') as fid:
-			for j, smiles in enumerate(smiles):
+			for j, smile in enumerate(smiles):
 				if ~np.isnan(ys[j, i]):
-					fid.write('{}\t{}\t{}\n'.format(smiles, '??', ys[j, i]))
+					fid.write('{}\t{}\t{}\n'.format(smile, '??', ys[j, i]))

@@ -51,7 +51,7 @@ def merge_data(data1, data2):
 
 def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1, 
 	data_split = 'cv', cv_folds = '1/1',	truncate_to = None, training_ratio = 0.9,
-	molecular_attributes = False, use_FP = None):
+	molecular_attributes = False, use_fp = None):
 	'''This is a helper script to read the data file and return
 	the training and test data sets separately. This is to allow for an
 	already-trained model to be evaluated using the test data (i.e., which
@@ -153,10 +153,10 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 				raise ValueError('inf value in tensor for {} at {}'.format(row[smiles_index], 
 					np.argwhere(np.isinf(mol_tensor))))
 			# Are we trying to use Morgan FPs?
-			if use_FP == 'Morgan':
+			if use_fp == 'Morgan':
 				mol_tensor = np.array(AllChem.GetMorganFingerprintAsBitVect(mol,3,nBits=512,useFeatures=True))
-			elif type(use_FP) != type(None):
-				print('Unrecognised use_FP option {}'.format(use_FP))
+			elif type(use_fp) != type(None):
+				print('Unrecognised use_FP option {}'.format(use_fp))
 			this_y = y_func(float(row[y_index]))
 			mols.append(mol_tensor)
 			y.append(this_y) # Measured log(solubility M/L)
@@ -187,7 +187,7 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 	### PAD MOLECULAR TENSORS
 	###################################################################################
 
-	if batch_size > 1 and type(use_FP) == type(None): # NEED TO PAD
+	if batch_size > 1 and type(use_fp) == type(None): # NEED TO PAD
 		num_atoms = [x.shape[0] for x in mols]
 		max_num_atoms = max(num_atoms)
 		print('padding tensors up to N_atoms = {}...'.format(max_num_atoms + 1))

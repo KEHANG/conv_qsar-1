@@ -29,7 +29,7 @@ def logloss_no_NaN(y_true, y_pred):
 def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2, 
 	scale_output = 0.05, padding = True, hidden = 0, hidden2 = 0, loss = 'mse', hidden_activation = 'tanh',
 	output_activation = 'linear', dr1 = 0.0, dr2 = 0.0, output_size = 1, sum_after = False,
-	molecular_attributes = False, use_FP = None):
+	molecular_attributes = False, use_fp = None):
 	'''Generates simple embedding model to use molecular tensor as
 	input in order to predict a single-valued output (i.e., yield)
 
@@ -56,7 +56,7 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 		from conv_qsar.utils.GraphEmbedding import GraphFP
 
 	# Add layers
-	if type(use_FP) == type(None): # normal mode, use convolution
+	if type(use_fp) == type(None): # normal mode, use convolution
 		model.add(GraphFP(embedding_size, sizeAttributeVector(molecular_attributes) - 1, 
 			depth = depth,
 			scale_output = scale_output,
@@ -68,7 +68,7 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 		if dr1 > 0:
 			model.add(Dropout(dr1))
 			print('    model: Added Dropout({})'.format(dr1))
-		if type(use_FP) == type(None):
+		if type(use_fp) == type(None):
 			model.add(Dense(hidden, activation = hidden_activation))
 		else:
 			model.add(Dense(hidden, activation = hidden_Activation, input_dim = 512))
