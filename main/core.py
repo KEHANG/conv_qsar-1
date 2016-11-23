@@ -23,8 +23,8 @@ def mse_no_NaN(y_true, y_pred):
 	'''For each sample, sum squared error ignoring NaN values'''
 	return K.sum(K.square(K.switch(K.logical_not(K.is_nan(y_true)), y_true, y_pred) - y_pred), axis = -1)
 
-def logloss_no_NaN(y_true, y_pred):
-	return K.sum(K.binary_crossentropy(K.switch(K.logical_not(K.is_nan(y_true)), y_true, y_pred), y_pred), axis = -1)
+def binary_crossnetropy_no_NaN(y_true, y_pred):
+	return K.sum(K.binary_crossentropy(K.switch(K.is_nan(y_true), y_pred, y_true), y_pred), axis = -1)
 
 def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2, 
 	scale_output = 0.05, padding = True, hidden = 0, hidden2 = 0, loss = 'mse', hidden_activation = 'tanh',
@@ -71,7 +71,7 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 		if type(use_fp) == type(None):
 			model.add(Dense(hidden, activation = hidden_activation))
 		else:
-			model.add(Dense(hidden, activation = hidden_Activation, input_dim = 512))
+			model.add(Dense(hidden, activation = hidden_activation, input_dim = 512))
 		print('    model: added {} Dense layer (-> {})'.format(hidden_activation, hidden))
 		if dr2 > 0:
 			model.add(Dropout(dr2))
@@ -100,7 +100,7 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 	if loss == 'custom':
 		loss = mse_no_NaN
 	elif loss == 'custom2':
-		loss = logloss_no_NaN
+		loss = binary_crossnetropy_no_NaN
 
 	print('compiling...',)
 	model.compile(loss = loss, optimizer = optimizer)
@@ -220,7 +220,13 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 					# 	print('NaN found in target!')
 					# 	print(smiles[j])
 					# 	raw_input('Pausing...')
+
+					# print(single_y_as_array)
+					# print('pre-train prediction: {}'.format(model.predict(single_mol_as_array)))
 					sloss = model.train_on_batch(single_mol_as_array, single_y_as_array)
+					# print('post-train prediction: {}'.format(model.predict(single_mol_as_array)))
+					# raw_input('pause')
+
 					# if np.isnan(sloss):
 					# 	print('WARNING: NAN LOSS')
 					# 	print('target was {}'.format(single_y_as_array))
@@ -228,6 +234,12 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 					# 	print('any NaN in mol? {}'.format(np.isnan(single_mol_as_array).any()))
 					# 	raw_input('Pausing...')
 					this_loss.append(sloss)
+
+					
+					# print('This loss: {}'.format(sloss))
+					# raw_input('pause')
+					
+					#print('Current running mean training loss: {}'.format(np.mean(this_loss)))
 				
 				# Run through testing set
 				print('Validating..')

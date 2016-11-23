@@ -8,6 +8,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from tqdm import tqdm
 
 def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 	'''This function evaluates model performance using test data.
@@ -35,7 +36,6 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 	mols_train = train['mols']; y_train = train['y']; smiles_train = train['smiles']
 	mols_val   = val['mols'];   y_val   = val['y'];   smiles_val   = val['smiles']
 	mols_test  = test['mols'];  y_test  = test['y'];  smiles_test  = test['smiles']
-	y_label = test['y_label']
 
 	y_train_pred = []
 	y_val_pred = []
@@ -43,20 +43,20 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 
 	if batch_size == 1: # UNEVEN TENSORS, ONE AT A TIME PREDICTION
 		# Run through training set
-		for j in range(len(mols_train)):
+		for j in tqdm(range(len(mols_train))):
 			single_mol_as_array = np.array(mols_train[j:j+1])
 			single_y_as_array = np.array(y_train[j:j+1])
 			spred = model.predict_on_batch(single_mol_as_array)
 			y_train_pred.append(spred)
 
 		# Run through validation set
-		for j in range(len(mols_val)):
+		for j in tqdm(range(len(mols_val))):
 			single_mol_as_array = np.array(mols_val[j:j+1])
 			spred = model.predict_on_batch(single_mol_as_array)
 			y_val_pred.append(spred)
 
 		# Run through testing set
-		for j in range(len(mols_test)):
+		for j in tqdm(range(len(mols_test))):
 			single_mol_as_array = np.array(mols_test[j:j+1])
 			spred = model.predict_on_batch(single_mol_as_array)
 			y_test_pred.append(spred)
@@ -78,11 +78,18 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 		try:
 			# Trim it to recorded values (not NaN)
 			true = np.array(true).flatten()
+			print(true)
+			print(true.shape)
 			pred = np.array(pred).flatten()
+			print(pred)
+			print(pred.shape)
+
+			pred = pred[~np.isnan(true)]
+			true = true[~np.isnan(true)]
 
 			# For TOX21
 			AUC = 'N/A'
-			if len(set(list(true))) == 2:
+			if len(set(list(true))) <= 2:
 				from sklearn.metrics import roc_auc_score, roc_curve, auc
 				roc_x, roc_y, _ = roc_curve(true, pred)
 				AUC = roc_auc_score(true, pred)
@@ -99,10 +106,6 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 				plt.legend(loc = "lower right")
 				plt.savefig(test_fpath + ' {} ROC.png'.format(set_label), bbox_inches = 'tight')
 				plt.clf()
-
-
-			pred = pred[~np.isnan(true)]
-			true = true[~np.isnan(true)]
 
 			min_y = np.min((true, pred))
 			max_y = np.max((true, pred))
@@ -121,8 +124,8 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 
 			# Create parity plot
 			plt.scatter(true, pred, alpha = 0.5)
-			plt.xlabel('Actual {}'.format(y_label))
-			plt.ylabel('Predicted {}'.format(y_label))
+			plt.xlabel('Actual')
+			plt.ylabel('Predicted')
 			plt.title('Parity plot for {} ({} set, N = {})'.format(y_label, set_label, len(true)) + 
 				'\nMSE = {}, MAE = {}, q = {}, AUC = {}'.format(round3(mse), round3(mae), round3(q), AUC) + 
 				'\na = {}, r^2 = {}'.format(round3(a), round3(r2)) + 
@@ -133,8 +136,31 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 			plt.savefig(test_fpath + ' {}.png'.format(set_label), bbox_inches = 'tight')
 			plt.clf()
 
-		except:
+		except Exception as e:
+			print(e)
 			pass
+
+	# Create plots for datasets
+	if y_train:
+		y_label = train['y_label']
+		if type(y_train[0]) != type(0.0):
+			num_targets = y_train[0].shape[-1]
+		else:
+			num_targets = 1
+	elif y_val:
+		y_label = val['y_label']
+		if type(y_val[0]) != type(0.0):
+			num_targets = y_val[0].shape[-1]
+		else:
+			num_targets = 1
+	elif y_test:
+		y_label = test['y_label']
+		if type(y_test[0]) != type(0.0):
+			num_targets = y_test[0].shape[-1]
+		else:
+			num_targets = 1
+	else:
+		raise ValueError('Nothing to evaluate?')
 
 	# Save
 	with open(test_fpath + '.test', 'w') as fid:
@@ -147,8 +173,6 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 				y_test_pred[i],
 				y_test[i] - y_test_pred[i]))
 
-	# Create plots for datasets
-	num_targets = 1
 	if y_train: 
 		if type(y_train[0]) != type(0.): 
 			num_targets = len(y_train[0])
@@ -174,9 +198,9 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 		else:
 			parity_plot(y_test, y_test_pred, 'test')
 
-	train['residuals'] = np.array(y_train) - np.array(y_train_pred)
-	val['residuals'] = np.array(y_val) - np.array(y_val_pred)
-	test['residuals'] = np.array(y_test) - np.array(y_test_pred)
+	# train['residuals'] = np.array(y_train) - np.array(y_train_pred)
+	# val['residuals'] = np.array(y_val) - np.array(y_val_pred)
+	# test['residuals'] = np.array(y_test) - np.array(y_test_pred)
 
 	return (train, val, test)
 

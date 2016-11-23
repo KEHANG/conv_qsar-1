@@ -4,11 +4,15 @@ import os
 
 if __name__ == '__main__':
 
+	################################################
+	### LEADERBOARD DATASET
+	################################################
+
 	# Read SDF
 	suppl = Chem.SDMolSupplier(
 		os.path.join(
 			os.path.dirname(os.path.dirname(__file__)),
-			'data', 'tox21_10k_challenge_test.sdf'
+			'data', 'tox21_10k_data_all.sdf'
 		),
 		sanitize = False
 	)
@@ -17,12 +21,12 @@ if __name__ == '__main__':
 	smiles = []
 	ys = None
 	targets = [
-		'NR-AR',
 		'NR-AhR',
+		'NR-AR',
 		'NR-AR-LBD',
+		'NR-Aromatase',
 		'NR-ER',
 		'NR-ER-LBD',
-		'NR-aromatase',
 		'NR-PPAR-gamma',
 		'SR-ARE',
 		'SR-ATAD5',
@@ -54,10 +58,11 @@ if __name__ == '__main__':
 		print('Target {} has {} entries; {} active'.format(
 			target, sum(~np.isnan(ys[:, i])), np.sum(ys[~np.isnan(ys[:, i]), i])
 		))
-		with open(os.path.join(
-				os.path.dirname(os.path.dirname(__file__)),
-				'data', '{}-test.smiles'.format(target.lower())
-				), 'w') as fid:
-			for j, smile in enumerate(smiles):
-				if ~np.isnan(ys[j, i]):
-					fid.write('{}\t{}\t{}\n'.format(smile, '??', ys[j, i]))
+		
+	with open(os.path.join(
+			os.path.dirname(os.path.dirname(__file__)),
+			'data', 'tox21.smiles'
+			), 'w') as fid:
+		for j, smile in enumerate(smiles):
+			fid.write('{}\t{}\t{}\n'.format(smile, '??', '\t'.join([str(x) for x in ys[j, :]])))
+

@@ -84,8 +84,8 @@ if __name__ == '__main__':
 		del data_kwargs['__name__'] #  from configparser
 	if 'batch_size' in config['TRAINING']:
 		data_kwargs['batch_size'] = int(config['TRAINING']['batch_size'])
-	if 'use_FP' in config['ARCHITECTURE']:
-		data_kwargs['use_FP'] = config['ARCHITECTURE']['use_FP']
+	if 'use_fp' in config['ARCHITECTURE']:
+		data_kwargs['use_fp'] = config['ARCHITECTURE']['use_fp']
 	if 'shuffle_seed' in data_kwargs:
 		data_kwargs['shuffle_seed'] = int(data_kwargs['shuffle_seed'])
 	else:
@@ -111,10 +111,16 @@ if __name__ == '__main__':
 	# mols_test  = test['mols'];  y_test  = test['y'];  smiles_test  = test['smiles']
 	y_label = train['y_label']
 
-	y_train_pred = np.array([0.0 for z in mols_train])
+	if type(y_train[0]) != type(0.0):
+		num_targets = y_train[0].shape[-1]
+	else:
+		num_targets = 1
+
+	y_train_pred = np.array([np.array([0.0 for t in range(num_targets)]) for z in mols_train])
 	print(y_train_pred.shape)
 	# y_val_pred = np.array([0 for z in mols_val])
 	# y_test_pred = np.array([0 for z in mols_test])
+
 
 	ref_fpath = fpath
 	cv_folds = range(1, 6)
@@ -130,7 +136,10 @@ if __name__ == '__main__':
 			single_mol_as_array = np.array(mols_train[j:j+1])
 			single_y_as_array = np.array(y_train[j:j+1])
 			spred = model.predict_on_batch(single_mol_as_array)
-			y_train_pred[j] += spred
+			if num_targets == 1:
+				y_train_pred[j] += spred
+			else:
+				y_train_pred[j,:] += spred.flatten()
 
 	# Now divide by the number of folds to average predictions
 	y_train_pred = y_train_pred / float(len(cv_folds))
@@ -146,6 +155,13 @@ if __name__ == '__main__':
 
 		try:
 			# Trim it to recorded values (not NaN)
+
+			true = np.array(true).flatten()
+			pred = np.array(pred).flatten()
+
+			pred = pred[~np.isnan(true)]
+			true = true[~np.isnan(true)]
+
 			true = np.array(true).flatten()
 			pred = np.array(pred).flatten()
 
@@ -171,4 +187,8 @@ if __name__ == '__main__':
 			print(e)
 
 	# Create plots for datasets
-	parity_plot(y_train, y_train_pred, 'leaderboard set (consensus)')
+	if num_targets != 1:
+		for i in range(num_targets):
+				parity_plot([x[i] for x in y_train], [x[i] for x in y_train_pred], 'leaderboard set (consensus) - ' + y_label[i])
+	else:
+		parity_plot(y_train, y_train_pred, 'leaderboard set (consensus)')

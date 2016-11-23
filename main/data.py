@@ -67,6 +67,7 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 
 	# Delaney solubility
 	if data_label in ['delaney', 'delaney sol']:
+		delimeter = ','
 		dset = 'delaney'
 		data_fpath = os.path.join(data_froot, 'Delaney2004.txt')
 		smiles_index = 3
@@ -76,6 +77,7 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 
 	# Abraham octanol set
 	elif data_label in ['abraham', 'abraham sol', 'abraham_oct']:
+		delimeter = ','
 		dset = 'abraham'
 		data_fpath = os.path.join(data_froot, 'AbrahamAcree2014_Octsol_partialSmiles.csv')
 		smiles_index = 1
@@ -84,6 +86,7 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 		y_label = 'log10(octanol sol (M))'
 
 	elif data_label in ['bradley_good', 'bradley']:
+		delimeter = ','
 		dset = 'bradley_good'
 		data_fpath = os.path.join(data_froot, 'BradleyDoublePlusGoodMeltingPointDataset.csv')
 		smiles_index = 2
@@ -93,12 +96,35 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 
 	elif 'nr' in data_label or 'sr' in data_label:
 		print('Assuming TOX21 data {}'.format(data_label))
+		delimeter = '\t'
 		dset = data_label
 		data_fpath = os.path.join(data_froot, '{}.smiles'.format(data_label))
 		smiles_index = 0
 		y_index = 2
 		def y_func(x): return x
 		y_label = 'Active'
+
+	elif 'tox21' == data_label:
+		print('Assuming ALL TOX21 data')
+		delimeter = '\t'
+		dset = 'tox21'
+		data_fpath = os.path.join(data_froot, 'tox21.smiles')
+		y_label = ['nr-ahr','nr-ar','nr-ar-lbd','nr-aromatase','nr-er','nr-er-lbd',
+				'nr-ppar-gamma','sr-are','sr-atad5','sr-hse','sr-mmpp','sr-p53']
+		smiles_index = 0
+		y_index = 2
+		def y_func(x): return x
+
+	elif 'tox21-test' == data_label:
+		print('Assuming ALL TOX21 data, leaderboard test set')
+		delimeter = '\t'
+		dset = 'tox21-test'
+		data_fpath = os.path.join(data_froot, 'tox21-test.smiles')
+		y_label = ['nr-ahr','nr-ar','nr-ar-lbd','nr-aromatase','nr-er','nr-er-lbd',
+				'nr-ppar-gamma','sr-are','sr-atad5','sr-hse','sr-mmpp','sr-p53']
+		smiles_index = 0
+		y_index = 2
+		def y_func(x): return x
 
 	# Other?
 	else:
@@ -113,10 +139,6 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 	print('reading data...')
 	data = []
 	with open(data_fpath, 'r') as data_fid:
-		if 'sr' in dset or 'nr' in dset:
-			delimeter = '\t'
-		else:
-			delimeter = ','
 		reader = csv.reader(data_fid, delimiter = delimeter, quotechar = '"')
 		for row in reader:
 			data.append(row)
@@ -155,17 +177,23 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 			# Are we trying to use Morgan FPs?
 			if use_fp == 'Morgan':
 				mol_tensor = np.array(AllChem.GetMorganFingerprintAsBitVect(mol,3,nBits=512,useFeatures=True))
+				#print(mol_tensor)
+			elif use_fp == 'Morgan2':
+				mol_tensor = np.array(AllChem.GetMorganFingerprintAsBitVect(mol,2,nBits=512,useFeatures=True))
 			elif type(use_fp) != type(None):
 				print('Unrecognised use_FP option {}'.format(use_fp))
-			this_y = y_func(float(row[y_index]))
+			if 'tox21' not in dset:
+				this_y = y_func(float(row[y_index]))
+			else: # get full TOX21 data
+				this_y = np.array([float(x) for x in row[y_index:]])
 			mols.append(mol_tensor)
 			y.append(this_y) # Measured log(solubility M/L)
 			smiles.append(Chem.MolToSmiles(mol, isomericSmiles = True)) # Smiles
 
 			# Check for redundancies and average
-			if 'nr-' in dset or 'sr-' in dset:
+			if 'nr-' in dset or 'sr-' in dset or 'tox21' in dset:
 				continue
-				# TODO: ADD DUPLICATE HANDLING
+				# Don't worry about duplicates in TOX21 dataset
 
 			elif smiles.count(smiles[-1]) > 1:
 				print('**** DUPLICATE ENTRY ****')

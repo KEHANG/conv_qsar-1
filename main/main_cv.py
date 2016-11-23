@@ -81,8 +81,8 @@ if __name__ == '__main__':
 		del data_kwargs['__name__'] #  from configparser
 	if 'batch_size' in config['TRAINING']:
 		data_kwargs['batch_size'] = int(config['TRAINING']['batch_size'])
-	if 'use_FP' in config['ARCHITECTURE']:
-		data_kwargs['use_FP'] = config['ARCHITECTURE']['use_FP']
+	if 'use_fp' in config['ARCHITECTURE']:
+		data_kwargs['use_fp'] = config['ARCHITECTURE']['use_fp']
 	if 'shuffle_seed' in data_kwargs:
 		data_kwargs['shuffle_seed'] = int(data_kwargs['shuffle_seed'])
 	else:
