@@ -125,6 +125,28 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 		smiles_index = 0
 		y_index = 2
 		def y_func(x): return x
+	
+	elif 'tox21-eval' == data_label:
+		print('Assuming ALL TOX21 data, eval set')
+		delimeter = '\t'
+		dset = 'tox21-test'
+		data_fpath = os.path.join(data_froot, 'tox21-eval.smiles')
+		y_label = ['nr-ahr','nr-ar','nr-ar-lbd','nr-aromatase','nr-er','nr-er-lbd',
+				'nr-ppar-gamma','sr-are','sr-atad5','sr-hse','sr-mmpp','sr-p53']
+		smiles_index = 0
+		y_index = 2
+		def y_func(x): return x
+
+	elif 'tox21-traintest' == data_label:
+		print('Assuming traintest TOX21 data')
+		delimeter = '\t'
+		dset = 'tox21-traintest'
+		data_fpath = os.path.join(data_froot, 'tox21-traintest.smiles')
+		y_label = ['nr-ahr','nr-ar','nr-ar-lbd','nr-aromatase','nr-er','nr-er-lbd',
+				'nr-ppar-gamma','sr-are','sr-atad5','sr-hse','sr-mmpp','sr-p53']
+		smiles_index = 0
+		y_index = 2
+		def y_func(x): return x
 
 	# Other?
 	else:
