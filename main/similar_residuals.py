@@ -1,5 +1,8 @@
 '''
 Look at the prediction residual against similarity scores
+
+This script expects an input file as a command-line argument
+with lines of the form "smiles \t residual"
 '''
 
 import rdkit.Chem as Chem

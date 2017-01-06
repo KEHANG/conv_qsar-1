@@ -206,7 +206,8 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128):
 
 def test_embeddings_demo(model, fpath):
 	'''This function tests molecular representations by creating visualizations
-	of fingerprints given a SMILES string.
+	of fingerprints given a SMILES string. Molecular attributes are used, so the
+	model to load should have been trained using molecular attributes.
 
 	inputs:
 		model - the trained Keras model

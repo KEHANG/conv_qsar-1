@@ -2,11 +2,14 @@ import rdkit.Chem as Chem
 import numpy as np
 import os
 
-if __name__ == '__main__':
 
-	################################################
-	### LEADERBOARD DATASET
-	################################################
+'''
+This script is meant to split the Tox21 train dataset into the 
+individual target datasets for training single-task models.
+'''
+
+
+if __name__ == '__main__':
 
 	# Read SDF
 	suppl = Chem.SDMolSupplier(

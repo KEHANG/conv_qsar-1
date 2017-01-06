@@ -36,12 +36,24 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 	inputs:
 		embedding_size - size of fingerprint for GraphFP layer
 		lr - learning rate to use (train_model overwrites this value)
-		optimizer - optimization function to use (adam or rmsprop supported)
+		optimizer - optimization function to use
 		depth - depth of the neural fingerprint (i.e., radius)
 		scale_output - initial scale for output weights in GraphFP
-		padding - whether or not molecular tensors will be padded 
+		padding - whether or not molecular tensors will be padded (i.e., batch_size > 1)
 		hidden - number of hidden tanh nodes after FP (0 is linear)
+		hidden2 - number of hidden nodes after "hidden" layer
+		hidden_activation - activation function used in hidden layers
+		output_activation - activation function for final output nodes
+		dr1 - dropout rate after embedding
+		dr2 - dropout rate after hidden
 		loss - loss function as a string (e.g., 'mse')
+		sum_after - whether to sum neighbor contributions after passing
+					through a single network layer, or to do so before
+					passing them from the network layer (during updates)
+		molecular_attributes - whether to include additional molecular 
+					attributes in the atom-level features (recommended)
+		use_fp - whether the representation used is actually a fingerprint
+					and not a convolutional network (for benchmarking)
 
 	outputs:
 		model - a Keras model'''
@@ -49,13 +61,14 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 	# Base model
 	model = Sequential()
 
+	# Are we summing before or after? Two different defined "GraphFP" layers
 	if sum_after:
 		print('Using GraphFP with attribute summing *after* activation')
 		from conv_qsar.utils.GraphEmbedding_sumAfter import GraphFP
 	else:
 		from conv_qsar.utils.GraphEmbedding import GraphFP
 
-	# Add layers
+	# Are we using a convolutional embedding or a fingerprint representation?
 	if type(use_fp) == type(None): # normal mode, use convolution
 		model.add(GraphFP(embedding_size, sizeAttributeVector(molecular_attributes) - 1, 
 			depth = depth,
@@ -68,9 +81,9 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 		if dr1 > 0:
 			model.add(Dropout(dr1))
 			print('    model: Added Dropout({})'.format(dr1))
-		if type(use_fp) == type(None):
+		if type(use_fp) == type(None): # convolutional model can inherit previous layer size
 			model.add(Dense(hidden, activation = hidden_activation))
-		else:
+		else: # need to explicitly define fingerprint length since this is the first layer
 			model.add(Dense(hidden, activation = hidden_activation, input_dim = 512))
 		print('    model: added {} Dense layer (-> {})'.format(hidden_activation, hidden))
 		if dr2 > 0:
@@ -115,7 +128,7 @@ def save_model(model, loss, val_loss, fpath = '', config = {}, tstamp = ''):
 		model - a Keras model
 		loss - list of training losses 
 		val_loss - list of validation losses
-		fpath - root filepath to save everything to (with .json, h5, png, info 
+		fpath - root filepath to save everything to (with .json, h5, png, info)
 		config - the configuration dictionary that defined this model 
 		tstamp - current timestamp to log in info file'''
 
@@ -160,16 +173,16 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 		lr_func - string which is evaluated with 'epoch' to produce the learning 
 				rate at each epoch 
 		patience - number of epochs to wait when no progress is being made in 
-				the validation loss
+				the validation loss. a patience of -1 means that the model will
+				use weights from the best-performing model during training
 
 	outputs:
 		model - a trained Keras model
 		loss - list of training losses corresponding to each epoch 
 		val_loss - list of validation losses corresponding to each epoch'''
 
-	# Get data from helper function
+	# Unpack data 
 	(train, val, test) = data
-	# Unpack
 	mols_train = train['mols']; y_train = train['y']; smiles_train = train['smiles']
 	mols_val   = val['mols'];   y_val   = val['y'];   smiles_val   = val['smiles']
 	print('{} to train on'.format(len(mols_train)))
@@ -184,6 +197,7 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 	# Fit (allows keyboard interrupts in the middle)
 	# Because molecular graph tensors are different sizes based on N_atoms, can only do one at a time
 	# (alternative is to pad with zeros and try to add some masking feature to GraphFP)
+	# -> this is why batch_size == 1 is treated distinctly
 	try:
 		loss = []
 		val_loss = []
@@ -203,44 +217,11 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 				np.random.shuffle(training_order)
 				for j in tqdm(training_order):
 					single_mol_as_array = np.array(mols_train[j:j+1])
-					# if np.isinf(single_mol_as_array).any():
-					# 	print('Inf found in mol input!')
-					# 	print(smiles[j])
-					# 	raw_input('Pausing...')
-					# if np.isnan(single_mol_as_array).any():
-					# 	print('NaN found in mol input!')
-					# 	print(smiles[j])
-					# 	raw_input('Pausing...')
+
 					single_y_as_array = np.reshape(y_train[j], (1, -1))
-					# if np.isinf(single_y_as_array).any():
-					# 	print('Inf found in target!')
-					# 	print(smiles[j])
-					# 	raw_input('Pausing...')
-					# if np.isnan(single_y_as_array).any():
-					# 	print('NaN found in target!')
-					# 	print(smiles[j])
-					# 	raw_input('Pausing...')
-
-					# print(single_y_as_array)
-					# print('pre-train prediction: {}'.format(model.predict(single_mol_as_array)))
 					sloss = model.train_on_batch(single_mol_as_array, single_y_as_array)
-					# print('post-train prediction: {}'.format(model.predict(single_mol_as_array)))
-					# raw_input('pause')
-
-					# if np.isnan(sloss):
-					# 	print('WARNING: NAN LOSS')
-					# 	print('target was {}'.format(single_y_as_array))
-					# 	print('smiles is {}'.format(smiles_train[j]))
-					# 	print('any NaN in mol? {}'.format(np.isnan(single_mol_as_array).any()))
-					# 	raw_input('Pausing...')
 					this_loss.append(sloss)
 
-					
-					# print('This loss: {}'.format(sloss))
-					# raw_input('pause')
-					
-					#print('Current running mean training loss: {}'.format(np.mean(this_loss)))
-				
 				# Run through testing set
 				print('Validating..')
 				for j in tqdm(range(len(mols_val))):
@@ -268,7 +249,10 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 			if patience == -1:
 				model.load_weights('best.h5')
 
-		else: # PADDED VALUES 
+		else: 
+			# When the batch_size is larger than one, we have padded mol tensors
+			# which  means we need to concatenate them but can use Keras' built-in
+			# training functions with callbacks, validation_split, etc.
 			if lr_func:
 				callbacks = [LearningRateScheduler(lr)]
 			else:

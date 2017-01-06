@@ -206,5 +206,7 @@ if __name__ == '__main__':
 		#######################
 		### RESET MODEL WEIGHTS
 		#######################
+		# note: this allows for us to use the same compiled model for all folds in
+		#       a 5-fold CV, but the weights will be reset so there is no memory.
 
 		model = reset_layers.reset(model)
