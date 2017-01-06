@@ -19,6 +19,7 @@ class Graph():
 		self.num_nodes = 0
 		self.edges = []
 		self.num_edges = 0
+		self.N_features = 0
 		return
 
 	def nodeAttributes(self):
@@ -57,7 +58,7 @@ class Graph():
 			raise(ValueError, 'Need at least one bond!')
 
 		N_nodes = len(self.nodes)
-		N_features = len(self.nodes[0].attributes) + len(self.edges[0].attributes)
+		N_features = sizeAttributeVector(molecular_attributes = self.molecular_attributes)
 		tensor = np.zeros((N_nodes, N_nodes, N_features))
 
 		# Special case of no bonds (e.g., methane)
@@ -102,6 +103,7 @@ def molToGraph(rdmol, molecular_attributes = False):
 	'''Converts an RDKit molecule to an attributed undirected graph'''
 	# Initialize
 	graph = Graph()
+	graph.molecular_attributes = molecular_attributes
 
 	# Calculate atom-level molecule descriptors
 	attributes = [[] for i in rdmol.GetAtoms()]
@@ -134,7 +136,7 @@ def molToGraph(rdmol, molecular_attributes = False):
 
 		# Gasteiger partial charges sometimes gives NaN
 		for i in range(len(attributes)):
-			if np.isnan(attributes[i][-1]):
+			if np.isnan(attributes[i][-1]) or np.isinf(attributes[i][-1]):
 				attributes[i][-1] = 0.0
 
 		[attributes[i].append(float(a.GetProp('_GasteigerHCharge'))) \
@@ -143,7 +145,7 @@ def molToGraph(rdmol, molecular_attributes = False):
 
 		# Gasteiger partial charges sometimes gives NaN
 		for i in range(len(attributes)):
-			if np.isnan(attributes[i][-1]):
+			if np.isnan(attributes[i][-1]) or np.isinf(attributes[i][-1]):
 				attributes[i][-1] = 0.0
 
 
