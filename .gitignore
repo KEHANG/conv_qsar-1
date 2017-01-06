@@ -1,3 +1,6 @@
+# Messy development file
+ignoreme/*
+
 # Already-trained models
 models/*
 
