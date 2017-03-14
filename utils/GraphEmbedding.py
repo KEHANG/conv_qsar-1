@@ -150,8 +150,9 @@ class GraphFP(Layer):
 		bonds.name = 'bonds'
 
 		# Iterate through different depths, updating attributes each time
+		graph = original_graph
 		for depth in range(self.depth):
-			(attributes, graph) = self.attributes_update(attributes, depth + 1, original_graph, original_graph, bonds)
+			(attributes, graph) = self.attributes_update(attributes, depth + 1, graph, original_graph, bonds)
 			presum_fp_new = self.attributes_to_fp_contribution(attributes, depth)
 			presum_fp_new.name = 'presum_fp_new contribution'
 			fp = fp + K.sum(presum_fp_new, axis = 0) 
